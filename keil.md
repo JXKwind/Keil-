@@ -2,6 +2,10 @@
 
 最好观看官方的使用手册
 
+以下内容参考微信公众号：鱼鹰谈单片机
+
+[CSDN页面指路](https://blog.csdn.net/weixin_42876465/article/details/90732156)
+
 [手册](https://www.keil.com/support/man/docs/uv4/uv4_overview.htm)
 
 ## 基础按钮
