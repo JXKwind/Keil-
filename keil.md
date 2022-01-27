@@ -267,3 +267,56 @@ SAVE data.hex (起始地址),(结束地址)
 :00000001FF
 ```
 
+## 将程序全部下载到RAM中调试
+
+芯片的Flash是由寿命限制的，虽说对于一个项目来说，是够的，但是对一些需要使用很长时间的开发板而言，还是需要谨慎一些，可以使用RAM下载方式，无限次数下载，缺点就是掉电丢失
+
+对于一般的单片机而言，存储空间可以分为两块
+
+一块是RAM，一块是FLASH，RAM用来存储变量，flash用来存储常量、代码
+
+现在只使用RAM空间，将RAM空间手动区分，部分空间存储变量，部分空间存储常量、代码
+
+此时需要注意指针的使用，如果指针指向了代码的空间，那就必定会出现问题
+
+以C8T6为例，SRAM为20K，起始地址为0x20000000，大小为0x5000
+
+将代码区设置的大一些，变量存储区设置的小一些
+
+ROM: 0x20000000 SIZE: 0x4000
+
+RAM: 0x20004000 SIZE: 0x1000
+
+![](Picture/RAM1.PNG)
+
+由于所有的数据存放到RAM中，所以需要重新定向PC指针与SP指针，还需要设置内核的向量表寄存器，表示向量表存在RAM区，**在 FLASH 下载时，默认是从 0x0800 0000 获得 PC 指针和 SP 指针的，所以不需要额外设置这些，但 RAM 不同**
+
+需要添加一个ini文件，内容如下
+
+```
+FUNC void Setup(void)
+{
+	SP = _RDWORD(0X20000000);	/* set up sp poniter */
+	PC = _RDWORD(0X20000004);	/* set up pc pointer */
+	
+	_WDWORD(0xE000ED08,0x20000000);	/* set vector table offser register */
+}
+
+LOAD OBJ\demo.axf	INCREMENTAL
+
+Setup();
+
+g,main
+```
+
+添加到debug选项卡中，注意不要勾选Run to main !!
+
+![](Picture/RAM2.PNG)
+
+取消update 选项，否则会报错误
+
+![](Picture/RAM3.PNG)
+
+接下来只需要按**仿真**按钮即可，不能按下载按钮，下载按钮是将代码下载到flash里，
+
+仿真时也不可以按**复位**按钮，复位按钮是将程序跳转到flash区
