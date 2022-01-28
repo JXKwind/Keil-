@@ -2,10 +2,6 @@
 
 最好观看官方的使用手册
 
-以下内容参考微信公众号：鱼鹰谈单片机
-
-[CSDN页面指路](https://blog.csdn.net/weixin_42876465/article/details/90732156)
-
 [手册](https://www.keil.com/support/man/docs/uv4/uv4_overview.htm)
 
 ## 基础按钮
@@ -324,3 +320,43 @@ g,main
 接下来只需要按**仿真**按钮即可，不能按下载按钮，下载按钮是将代码下载到flash里，
 
 仿真时也不可以按**复位**按钮，复位按钮是将程序跳转到flash区
+
+## 使用EventRecorder调试程序
+
+说明页参见：[**终极调试组件Event Recorder，各种Link通吃，支持时间和功耗测量，printf打印，RTX5及中间件调试**](https://www.armbbs.cn/forum.php?mod=viewthread&tid=87176&highlight=event)
+
+简单说明：
+
+1. Keil版本需5.25以上
+2. ARM_Compiler V1.4.0 以上
+3. CMSIS软件包最好为最新版本，太老的版本不支持
+4. 该方法支持所有的Link，如JLink，ST-Link，CMSIS-DAP等
+5. 可以通过keil仿真界面的debugPrintf打印数据，可以检测程序运行时间
+6. 如果使用ULINK_Plus，可以检测功耗
+7. 无需占用系统额外的硬件资源，可以完美替代硬件串口打log
+8. 缺点是需要一块比较大的空间用作打印缓存，计算公式为 128 + 32 + 16 * 事件数 单位字节
+
+注意：使用keil仿真界面的debugPrintf打印数据时，需要注意程序内没有对printf函数进行重定向
+
+下面说明如何配置：
+
+![事件记录器](Picture/事件记录器.PNG)
+
+按照上图配置即可，要注意如果需要使用printf功能，需要将STDOUT修改为EVR
+
+之后再主程序添加如下代码即可使用
+
+```c
+#include "EventRecorder.h"
+
+EventRecorderInitialize(EventRecordAll, 1U);
+EventRecorderStart();
+```
+
+仿真之前需要将仿真器的CoreClock设置成系统主频，不需要启用Trace功能
+
+看一下效果
+
+![事件记录器1](Picture/事件记录器1.PNG)
+
+红框的警告是事件处理的缓冲区的空间会被初始化，不影响使用
